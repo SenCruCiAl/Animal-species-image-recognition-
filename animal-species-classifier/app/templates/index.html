@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Species Classifier</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(145deg, #eef3ff, #ffffff);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      .card {
+        width: min(560px, 92vw);
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        padding: 1.5rem;
+      }
+      h1 {
+        margin-top: 0;
+        color: #1f2937;
+      }
+      p {
+        color: #4b5563;
+      }
+      form {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 0.65rem 1rem;
+        background: #2563eb;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      #result {
+        margin-top: 1rem;
+        padding: 0.8rem;
+        border-radius: 8px;
+        background: #f3f4f6;
+      }
+      .error {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Animal Species Image Recognition</h1>
+      <p>Upload a JPG/PNG image to classify the detected animal species.</p>
+
+      <form id="predictForm">
+        <input id="imageInput" type="file" name="file" accept="image/*" required />
+        <button id="submitBtn" type="submit">Predict</button>
+      </form>
+
+      <section id="result" aria-live="polite">Prediction result will appear here.</section>
+    </main>
+
+    <script>
+      const form = document.getElementById("predictForm");
+      const imageInput = document.getElementById("imageInput");
+      const resultBox = document.getElementById("result");
+      const submitBtn = document.getElementById("submitBtn");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!imageInput.files.length) {
+          resultBox.textContent = "Please choose an image file.";
+          return;
+        }
+
+        submitBtn.disabled = true;
+        resultBox.classList.remove("error");
+        resultBox.textContent = "Running inference...";
+
+        const formData = new FormData();
+        formData.append("file", imageInput.files[0]);
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.detail || "Prediction failed.");
+          }
+
+          const confidencePct = (data.confidence * 100).toFixed(2);
+          resultBox.textContent = `Predicted class: ${data.predicted_class} (confidence: ${confidencePct}%)`;
+        } catch (error) {
+          resultBox.classList.add("error");
+          resultBox.textContent = `Error: ${error.message}`;
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
