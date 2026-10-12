@@ -3,6 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from app.inference import predict_species
@@ -29,4 +30,4 @@ def test_predict_species_returns_top_class_and_confidence():
     predicted_class, confidence = predict_species(model, class_names, img_bytes)
 
     assert predicted_class == "dog"
-    assert confidence == 0.8
+    assert confidence == pytest.approx(0.8, abs=1e-6)
